@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Trade Tracker</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f8f9fa;
+      padding: 20px;
+    }
+    h1 { text-align: center; }
+    .container {
+      max-width: 1000px;
+      margin: auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    button, label.upload-btn {
+      background: #28a745;
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      margin: 6px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: 0.2s;
+      display: inline-block;
+    }
+    button:hover, label.upload-btn:hover { background: #218838; }
+    input, select {
+      padding: 6px;
+      margin: 4px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      width: 180px;
+    }
+    input[type="file"] { display: none; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: center;
+    }
+    th {
+      background: #007bff;
+      color: white;
+    }
+    td {
+      background-color: white;
+    }
+    .action-btn {
+      cursor: pointer;
+      padding: 4px 8px;
+      margin: 0 2px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+    .delete-btn { background: #dc3545; color: white; }
+    td[contenteditable="true"] {
+      cursor: text;
+      transition: all 0.2s;
+    }
+    td[contenteditable="true"]:focus {
+      background-color: #e3f2fd;
+      outline: 2px solid #2196f3;
+    }
+    .action-cell {
+      width: 80px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📊 Trade Tracker</h1>
+
+    <!-- CSV 导入按钮 -->
+    <label for="csvFile" class="upload-btn">📂 Import CSV</label>
+    <input type="file" id="csvFile" accept=".csv">
+
+    <!-- 手动录入表单 -->
+    <h2>➕ Add Trade</h2>
+    <form id="tradeForm" onsubmit="return false;">
+      <select id="action">
+        <option>Buy</option>
+        <option>Sell</option>
+        <option>Sell Short</option>
+        <option>Buy to Cover</option>
+      </select>
+      <input type="text" id="symbol" placeholder="Ticker Symbol (e.g. QQQ)" required>
+      <input type="number" id="quantity" placeholder="Shares (正数)" required>
+      <input type="number" id="price" step="0.01" placeholder="Price per Share ($)" required>
+      <button type="button" onclick="manualAdd()">Add</button>
+    </form>
+
+    <!-- 交易表 -->
+    <h2>Transactions</h2>
+    <table id="tradeTable">
+      <thead>
+        <tr>
+          <th>Action</th>
+          <th>Symbol</th>
+          <th>Quantity</th>
+          <th>Price</th>
+          <th class="action-cell">Delete</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <!-- 汇总表 -->
+    <h2>Summary</h2>
+    <table id="summaryTable">
+      <thead>
+        <tr>
+          <th>Symbol</th>
+          <th>Current Quantity</th>
+          <th>Average Price</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script>
+    let trades = [];
+
+    // 为表单添加回车键触发提交
+    document.getElementById('tradeForm').addEventListener('keypress', function(e) {
+      // 当按下回车键时执行添加操作
+      if (e.key === 'Enter') {
+        e.preventDefault(); // 阻止默认表单提交行为
+        manualAdd(); // 调用添加交易函数
+      }
+    });
+
+    function normalizeQty(action, qty) {
+      qty = Number(qty);
+      if (action === "Buy" || action === "Buy to Cover") return qty;
+      if (action === "Sell" || action === "Sell Short") return -qty;
+      return qty;
+    }
+
+    function addTrade(action, symbol, qty, price, prepend=false) {
+      const trade = { action, symbol, qty: Number(qty), price: Number(price) };
+      if (prepend) {
+        trades.unshift(trade);
+      } else {
+        trades.push(trade);
+      }
+      renderTables();
+    }
+
+    function manualAdd() {
+      const action = document.getElementById("action").value;
+      const symbol = document.getElementById("symbol").value.trim().toUpperCase();
+      const qty = document.getElementById("quantity").value;
+      const price = document.getElementById("price").value;
+
+      if (!symbol || !qty || !price) return;
+
+      addTrade(action, symbol, qty, price, true);
+
+      // 清空输入框，保持操作类型选择不变
+      document.getElementById("quantity").value = "";
+      document.getElementById("price").value = "";
+      // 自动聚焦到股票代码输入框，方便连续输入
+      document.getElementById("symbol").focus();
+    }
+
+    function renderTables() {
+      const tbody = document.querySelector("#tradeTable tbody");
+      tbody.innerHTML = "";
+      trades.forEach((t, i) => {
+        let row = `<tr>
+          <td contenteditable="true" onblur="updateTrade(${i}, 'action', this.innerText)">${t.action}</td>
+          <td contenteditable="true" onblur="updateTrade(${i}, 'symbol', this.innerText)">${t.symbol}</td>
+          <td contenteditable="true" onblur="updateTrade(${i}, 'qty', this.innerText)">${t.qty}</td>
+          <td contenteditable="true" onblur="updateTrade(${i}, 'price', this.innerText)">${t.price}</td>
+          <td><button class="action-btn delete-btn" onclick="deleteTrade(${i})">🗑</button></td>
+        </tr>`;
+        tbody.innerHTML += row;
+      });
+
+      updateSummary();
+    }
+
+    function updateSummary() {
+      const summary = {};
+      trades.forEach(t => {
+        const q = normalizeQty(t.action, t.qty);
+        if (!summary[t.symbol]) summary[t.symbol] = { qty: 0, cost: 0 };
+        summary[t.symbol].qty += q;
+        summary[t.symbol].cost += q * t.price;
+      });
+
+      const sbody = document.querySelector("#summaryTable tbody");
+      sbody.innerHTML = "";
+      for (let sym in summary) {
+        const avg = summary[sym].qty !== 0 ? (summary[sym].cost / summary[sym].qty) : 0;
+        sbody.innerHTML += `<tr>
+          <td>${sym}</td>
+          <td>${summary[sym].qty}</td>
+          <td>$${avg.toFixed(2)}</td>
+        </tr>`;
+      }
+    }
+
+    function updateTrade(index, field, value) {
+      if (field === "qty" || field === "price") {
+        const numValue = parseFloat(value);
+        if (isNaN(numValue) || numValue < 0) {
+          alert(`请输入有效的${field === "qty" ? "数量" : "价格"}`);
+          renderTables();
+          return;
+        }
+        trades[index][field] = numValue;
+      } else if (field === "symbol") {
+        trades[index][field] = value.trim().toUpperCase();
+      } else if (field === "action") {
+        const validActions = ["Buy", "Sell", "Sell Short", "Buy to Cover"];
+        if (!validActions.includes(value)) {
+          alert("请输入有效的操作类型: Buy, Sell, Sell Short, Buy to Cover");
+          renderTables();
+          return;
+        }
+        trades[index][field] = value;
+      }
+      
+      renderTables();
+    }
+
+    function deleteTrade(index) {
+      trades.splice(index, 1);
+      renderTables();
+    }
+
+    document.getElementById("csvFile").addEventListener("change", function(e) {
+      const file = e.target.files[0];
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: function(results) {
+          results.data.forEach(row => {
+            if (row.Action && row.Symbol && row.Quantity && row.Price) {
+              let price = row.Price.replace(/\$/g, "").trim();
+              addTrade(row.Action, row.Symbol.toUpperCase(), row.Quantity, price);
+            }
+          });
+        }
+      });
+    });
+  </script>
+</body>
+</html>

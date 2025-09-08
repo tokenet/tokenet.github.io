@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en" spellcheck="false">
 <head>
@@ -5,6 +6,7 @@
   <title>Trade Tracker</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
   <style>
+    /* 样式部分保持不变 */
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: #f8f9fa;
@@ -12,9 +14,9 @@
       line-height: 1.6;
     }
     h1 { 
-      color: #2c3e50;
-      margin-bottom: 25px;
-      text-align: left;
+      color: #2c3e50; 
+      margin: 0 0 25px; 
+      text-align: center;
     }
     .container {
       max-width: 1000px;
@@ -24,19 +26,15 @@
       border-radius: 12px;
       box-shadow: 0 3px 10px rgba(0,0,0,0.1);
     }
-    #tradeForm {
-      text-align: left;
-      margin: 20px 0;
-    }
     button, label.upload-btn {
       background: #28a745;
       color: white;
       border: none;
-      padding: 9px 16px;
-      margin: 6px 6px 6px 0;
-      border-radius: 6px;
+      padding: 7px 12px;
+      margin: 3px;
+      border-radius: 4px;
       cursor: pointer;
-      font-size: 14px;
+      font-size: 13px;
       transition: all 0.2s ease;
     }
     button:hover, label.upload-btn:hover { 
@@ -44,137 +42,107 @@
       transform: translateY(-1px);
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
-    input {
-      padding: 8px 10px;
-      margin: 4px 4px 4px 0;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      width: 180px;
-      font-size: 14px;
-      transition: border 0.2s ease;
-    }
-    input:focus {
-      border-color: #3498db;
-      outline: none;
-      box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
-    }
     input[type="file"] { display: none; }
-    .upload-container {
-      text-align: left;
-      margin-bottom: 15px;
+    .upload-container { text-align: left; margin-bottom: 15px; }
+    .upload-status, .upload-error {
+      margin: 10px 0; padding: 8px; border-radius: 4px; display: none;
     }
-    .upload-status {
-      color: #27ae60;
-      margin: 10px 0;
-      padding: 8px;
-      background-color: #f1f8e9;
-      border-radius: 4px;
-      display: none;
-    }
-    .upload-error {
-      color: #e74c3c;
-      margin: 10px 0;
-      padding: 8px;
-      background-color: #fdedeb;
-      border-radius: 4px;
-      display: none;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 20px 0;
+    .upload-status { color: #27ae60; background-color: #f1f8e9; }
+    .upload-error { color: #e74c3c; background-color: #fdedeb; }
+    table { 
+      width: 100%; 
+      border-collapse: collapse; 
+      margin: 15px 0; 
     }
     th, td {
       border: 1px solid #eee;
-      padding: 12px 8px;
+      padding: 8px 5px;
       text-align: center;
+      vertical-align: middle;
     }
+    th:nth-child(1), td:nth-child(1) { width: 20%; }
+    th:nth-child(2), td:nth-child(2) { width: 25%; }
+    th:nth-child(3), td:nth-child(3) { width: 20%; }
+    th:nth-child(4), td:nth-child(4) { width: 20%; }
+    th:nth-child(5), td:nth-child(5) { width: 15%; }
     th {
       background: #3498db;
       color: white;
       font-weight: 600;
-    }
-    tr:nth-child(even) td {
-      background-color: #f9f9f9;
-    }
-    tr:hover td {
-      background-color: #f1f8ff;
-    }
-    .action-btn {
-      cursor: pointer;
-      padding: 5px 10px;
-      margin: 0 2px;
-      border-radius: 4px;
       font-size: 13px;
+    }
+    tr:nth-child(even) td { background-color: #f9f9f9; }
+    tr:hover td { background-color: #f1f8ff; }
+    .action-btn {
+      cursor: pointer; 
+      padding: 4px 8px; 
+      margin: 0 2px;
+      border-radius: 3px; 
+      font-size: 12px; 
       transition: all 0.2s;
     }
-    .delete-btn { 
-      background: #e74c3c; 
-      color: white; 
-      border: none;
-    }
-    .delete-btn:hover {
-      background: #c0392b;
-      transform: translateY(-1px);
-    }
-    td[contenteditable="true"] {
-      cursor: text;
+    .delete-btn { background: #e74c3c; color: white; border: none; }
+    .delete-btn:hover { background: #c0392b; transform: translateY(-1px); }
+    td[contenteditable="true"] { 
+      cursor: text; 
       transition: all 0.2s;
+      min-height: 28px;
+      line-height: 28px;
+      padding: 0 5px;
     }
     td[contenteditable="true"]:focus {
-      background-color: #e3f2fd;
+      background-color: #e3f2fd; 
       outline: 2px solid #3498db;
+      outline-offset: -1px;
     }
-    .action-cell {
-      width: 120px;
-      cursor: pointer;
-      position: relative;
+    .action-cell { 
+      width: 100%; 
+      cursor: pointer; 
+      position: relative; 
+      min-height: 28px;
+      line-height: 28px;
     }
     h2 {
-      color: #2c3e50;
-      margin-top: 25px;
-      margin-bottom: 15px;
-      font-size: 1.4rem;
+      color: #2c3e50; 
+      margin-top: 20px; 
+      margin-bottom: 10px;
+      font-size: 1.3rem; 
       text-align: left;
-      border-bottom: 2px solid #f1f1f1;
-      padding-bottom: 8px;
+      border-bottom: 2px solid #f1f1f1; 
+      padding-bottom: 6px;
     }
-    
-    /* 隐藏式选项框样式 */
     .action-options {
-      position: absolute;
-      z-index: 100;
+      position: absolute; 
+      z-index: 100; 
       background: white;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      box-shadow: 0 3px 10px rgba(0,0,0,0.15);
-      padding: 5px 0;
-      min-width: 100px;
+      border: 1px solid #ddd; 
+      border-radius: 4px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      padding: 3px 0; 
+      min-width: 90px; 
       display: none;
+      font-size: 13px;
     }
-    
     .action-option {
-      padding: 8px 15px;
-      text-align: left;
+      padding: 6px 12px; 
+      text-align: left; 
       cursor: pointer;
       transition: background 0.2s;
     }
-    
-    .action-option:hover {
-      background: #f1f8ff;
-      color: #3498db;
+    .action-option:hover { background: #f1f8ff; color: #3498db; }
+    #addTradeTable {
+      margin-bottom: 10px;
     }
-    
-    /* Add Trade区域的Action选择器 */
-    #action {
-      padding: 8px 10px;
-      margin: 4px 4px 4px 0;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      width: 180px;
-      font-size: 14px;
-      background-color: white;
-      cursor: pointer;
+    #addRow td {
+      padding: 5px 3px;
+    }
+    [placeholder]:empty:before {
+      content: attr(placeholder);
+      color: #999;
+      font-style: italic;
+    }
+    [placeholder]:empty:focus:before {
+      content: "";
     }
   </style>
 </head>
@@ -182,7 +150,6 @@
   <div class="container">
     <h1>📊 Trade Tracker</h1>
 
-    <!-- CSV 导入按钮 -->
     <div class="upload-container">
       <label for="csvFile" class="upload-btn">📂 Import CSV</label>
       <input type="file" id="csvFile" accept=".csv">
@@ -190,45 +157,39 @@
       <div class="upload-error" id="uploadError"></div>
     </div>
 
-    <!-- 手动录入表单 -->
     <h2>➕ Add Trade</h2>
-    <form id="tradeForm" onsubmit="return false;">
-      <select id="action">
-        <option value="Buy">Buy</option>
-        <option value="Sell">Sell</option>
-        <option value="Sell Short">Sell Short</option>
-        <option value="Buy to Cover">Buy to Cover</option>
-      </select>
-      <input type="text" id="symbol" placeholder="Ticker Symbol (e.g. QQQ)" required 
-             oninput="this.value = this.value.replace(/~/g, '').toUpperCase()">
-      <input type="number" id="quantity" placeholder="Shares" required>
-      <input type="number" id="price" step="0.01" placeholder="Price per Share" required>
-      <button type="button" onclick="manualAdd()">Add</button>
-    </form>
+    <table id="addTradeTable">
+      <thead>
+        <tr>
+          <th>Action</th><th>Symbol</th><th>Quantity</th><th>Price</th><th>Add</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr id="addRow">
+          <td class="action-cell" id="newAction" onclick="showNewActionOptions(this)">Buy</td>
+          <td contenteditable="true" id="newSymbol" placeholder="Ticker"></td>
+          <td contenteditable="true" id="newQty" placeholder="Shares"></td>
+          <td contenteditable="true" id="newPrice" placeholder="Price"></td>
+          <td><button onclick="manualAdd()">+</button></td>
+        </tr>
+      </tbody>
+    </table>
 
-    <!-- 交易表 -->
     <h2>Transactions</h2>
     <table id="tradeTable">
       <thead>
         <tr>
-          <th>Action</th>
-          <th>Symbol</th>
-          <th>Quantity</th>
-          <th>Price</th>
-          <th>Delete</th>
+          <th>Action</th><th>Symbol</th><th>Quantity</th><th>Price</th><th>Delete</th>
         </tr>
       </thead>
       <tbody></tbody>
     </table>
 
-    <!-- 汇总表 -->
     <h2>Summary</h2>
     <table id="summaryTable">
       <thead>
         <tr>
-          <th>Symbol</th>
-          <th>Current Quantity</th>
-          <th>Average Price</th>
+          <th>Symbol</th><th>Current Quantity</th><th>Average Price</th><th>Cost Basis</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -237,215 +198,146 @@
 
   <script>
     let trades = [];
-    let activeOptions = null; 
+    let activeOptions = null;
 
-    // 显示状态消息
-    function showStatus(message, isError = false) {
-      const statusEl = document.getElementById('uploadStatus');
-      const errorEl = document.getElementById('uploadError');
-      
-      statusEl.style.display = isError ? 'none' : 'block';
-      errorEl.style.display = isError ? 'block' : 'none';
-      
-      if (isError) {
-        errorEl.textContent = message;
-      } else {
-        statusEl.textContent = message;
-      }
-      
-      // 3秒后自动隐藏
-      setTimeout(() => {
-        statusEl.style.display = 'none';
-        errorEl.style.display = 'none';
-      }, 3000);
+    function showStatus(msg, err=false) {
+      const s = document.getElementById('uploadStatus');
+      const e = document.getElementById('uploadError');
+      s.style.display = err ? 'none':'block';
+      e.style.display = err ? 'block':'none';
+      if (err) e.textContent = msg; else s.textContent = msg;
+      setTimeout(()=>{s.style.display='none'; e.style.display='none';},3000);
     }
 
-    document.addEventListener('click', (e) => {
+    document.addEventListener('click', e=>{
       if (activeOptions && !activeOptions.contains(e.target) && 
           !e.target.classList.contains('action-cell')) {
-        activeOptions.remove();
-        activeOptions = null;
+        activeOptions.remove(); activeOptions=null;
       }
     });
 
-    document.getElementById('tradeForm').addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        manualAdd();
-      }
+    document.getElementById('addRow').addEventListener('keypress', function(e){
+      if (e.key==='Enter'){ e.preventDefault(); manualAdd(); }
     });
 
-    function showActionOptions(index, cell) {
-      if (activeOptions) {
-        activeOptions.remove();
-      }
-
-      const optionsBox = document.createElement('div');
-      optionsBox.className = 'action-options';
-      
-      const actions = ["Buy", "Sell", "Sell Short", "Buy to Cover"];
-      actions.forEach(action => {
-        const option = document.createElement('div');
-        option.className = 'action-option';
-        option.textContent = action;
-        option.onclick = () => {
-          trades[index].action = action;
-          renderTables();
-          optionsBox.remove();
-          activeOptions = null;
-        };
-        optionsBox.appendChild(option);
+    function showActionOptions(index, cell){
+      if (activeOptions) activeOptions.remove();
+      const box=document.createElement('div');
+      box.className='action-options';
+      ["Buy","Sell","Sell Short","Buy to Cover"].forEach(a=>{
+        const o=document.createElement('div'); o.className='action-option';
+        o.textContent=a; o.onclick=()=>{trades[index].action=a; renderTables(); box.remove(); activeOptions=null;};
+        box.appendChild(o);
       });
-
-      const rect = cell.getBoundingClientRect();
-      optionsBox.style.top = `${rect.bottom + window.scrollY}px`;
-      optionsBox.style.left = `${rect.left + window.scrollX}px`;
-      
-      document.body.appendChild(optionsBox);
-      activeOptions = optionsBox;
-      
-      setTimeout(() => {
-        optionsBox.style.display = 'block';
-      }, 10);
+      const rect=cell.getBoundingClientRect();
+      box.style.top=`${rect.bottom+window.scrollY}px`; box.style.left=`${rect.left+window.scrollX}px`;
+      document.body.appendChild(box); activeOptions=box; setTimeout(()=>box.style.display='block',10);
     }
 
-    function normalizeQty(action, qty) {
-      qty = Number(qty);
-      if (action === "Buy" || action === "Buy to Cover") return qty;
-      if (action === "Sell" || action === "Sell Short") return -qty;
+    function showNewActionOptions(cell){
+      if (activeOptions) activeOptions.remove();
+      const box=document.createElement('div'); box.className='action-options';
+      ["Buy","Sell","Sell Short","Buy to Cover"].forEach(a=>{
+        const o=document.createElement('div'); o.className='action-option';
+        o.textContent=a; o.onclick=()=>{cell.textContent=a; box.remove(); activeOptions=null;};
+        box.appendChild(o);
+      });
+      const rect=cell.getBoundingClientRect();
+      box.style.top=`${rect.bottom+window.scrollY}px`; box.style.left=`${rect.left+window.scrollX}px`;
+      document.body.appendChild(box); activeOptions=box; setTimeout(()=>box.style.display='block',10);
+    }
+
+    function normalizeQty(action, qty){
+      qty=Number(qty);
+      if (action==="Buy"||action==="Buy to Cover") return qty;
+      if (action==="Sell"||action==="Sell Short") return -qty;
       return qty;
     }
 
-    function addTrade(action, symbol, qty, price, prepend=false) {
-      symbol = symbol.replace(/~/g, '').toUpperCase();
-      const trade = { action, symbol, qty: Number(qty), price: Number(price) };
-      if (prepend) {
-        trades.unshift(trade);
-      } else {
-        trades.push(trade);
-      }
+    function addTrade(action,symbol,qty,price,prepend=false){
+      symbol=symbol.replace(/~/g,'').toUpperCase();
+      const trade={action,symbol,qty:Number(qty),price:Number(price)};
+      if(prepend){trades.unshift(trade);}else{trades.push(trade);}
       renderTables();
     }
 
-    function manualAdd() {
-      const action = document.getElementById("action").value;
-      const symbol = document.getElementById("symbol").value.trim().replace(/~/g, '').toUpperCase();
-      const qty = document.getElementById("quantity").value;
-      const price = document.getElementById("price").value;
+    function manualAdd(){
+      const action=document.getElementById("newAction").textContent;
+      const symbol=document.getElementById("newSymbol").textContent.trim().replace(/~/g,'').toUpperCase();
+      const qty=document.getElementById("newQty").textContent;
+      const price=document.getElementById("newPrice").textContent;
 
-      if (!symbol || !qty || !price) return;
+      if(!symbol||!qty||!price) return;
 
-      addTrade(action, symbol, qty, price, true);
+      addTrade(action,symbol,qty,price,true);
 
-      document.getElementById("symbol").value = "";
-      document.getElementById("quantity").value = "";
-      document.getElementById("price").value = "";
-      document.getElementById("symbol").focus();
+      // 只清空数量和价格，保留Symbol
+      document.getElementById("newQty").textContent="";
+      document.getElementById("newPrice").textContent="";
+      // 聚焦到数量输入框，方便连续输入同一股票的交易
+      document.getElementById("newQty").focus();
     }
 
-    function renderTables() {
-      const tbody = document.querySelector("#tradeTable tbody");
-      tbody.innerHTML = "";
-      trades.forEach((t, i) => {
-        const row = document.createElement('tr');
-        
-        const actionCell = document.createElement('td');
-        actionCell.className = 'action-cell';
-        actionCell.textContent = t.action;
-        actionCell.onclick = (e) => {
-          e.stopPropagation();
-          showActionOptions(i, actionCell);
-        };
-        
-        const symbolCell = document.createElement('td');
-        symbolCell.contentEditable = true;
-        symbolCell.textContent = t.symbol;
-        symbolCell.onblur = () => {
-          updateTrade(i, 'symbol', symbolCell.textContent);
-        };
-        
-        const qtyCell = document.createElement('td');
-        qtyCell.contentEditable = true;
-        qtyCell.textContent = t.qty;
-        qtyCell.onblur = () => {
-          updateTrade(i, 'qty', qtyCell.textContent);
-        };
-        
-        const priceCell = document.createElement('td');
-        priceCell.contentEditable = true;
-        priceCell.textContent = t.price;
-        priceCell.onblur = () => {
-          updateTrade(i, 'price', priceCell.textContent);
-        };
-        
-        const deleteCell = document.createElement('td');
-        deleteCell.innerHTML = `<button class="action-btn delete-btn" onclick="deleteTrade(${i})">🗑</button>`;
-        
-        row.appendChild(actionCell);
-        row.appendChild(symbolCell);
-        row.appendChild(qtyCell);
-        row.appendChild(priceCell);
-        row.appendChild(deleteCell);
-        tbody.appendChild(row);
+    function renderTables(){
+      const tbody=document.querySelector("#tradeTable tbody");
+      tbody.innerHTML="";
+      trades.forEach((t,i)=>{
+        const row=document.createElement('tr');
+        const ac=document.createElement('td'); ac.className='action-cell'; ac.textContent=t.action;
+        ac.onclick=e=>{e.stopPropagation(); showActionOptions(i,ac);};
+        const sc=document.createElement('td'); sc.contentEditable=true; sc.textContent=t.symbol;
+        sc.onblur=()=>updateTrade(i,'symbol',sc.textContent);
+        const qc=document.createElement('td'); qc.contentEditable=true; qc.textContent=t.qty;
+        qc.onblur=()=>updateTrade(i,'qty',qc.textContent);
+        const pc=document.createElement('td'); pc.contentEditable=true; pc.textContent=t.price;
+        pc.onblur=()=>updateTrade(i,'price',pc.textContent);
+        const dc=document.createElement('td');
+        dc.innerHTML=`<button class="action-btn delete-btn" onclick="deleteTrade(${i})">🗑</button>`;
+        row.append(ac,sc,qc,pc,dc); tbody.appendChild(row);
       });
-
       updateSummary();
     }
 
-    function updateSummary() {
-      const summary = {};
-      trades.forEach(t => {
-        const q = normalizeQty(t.action, t.qty);
-        if (!summary[t.symbol]) summary[t.symbol] = { qty: 0, cost: 0 };
-        summary[t.symbol].qty += q;
-        summary[t.symbol].cost += q * t.price;
+    function updateSummary(){
+      const summary={};
+      trades.forEach(t=>{
+        const q=normalizeQty(t.action,t.qty);
+        if(!summary[t.symbol]) summary[t.symbol]={qty:0,cost:0};
+        summary[t.symbol].qty+=q;
+        summary[t.symbol].cost+=q*t.price;
       });
-
-      const sbody = document.querySelector("#summaryTable tbody");
-      sbody.innerHTML = "";
-      for (let sym in summary) {
-        const avg = summary[sym].qty !== 0 ? (summary[sym].cost / summary[sym].qty) : 0;
-        sbody.innerHTML += `<tr>
-          <td>${sym}</td>
-          <td>${summary[sym].qty}</td>
-          <td>$${avg.toFixed(2)}</td>
+      const sbody=document.querySelector("#summaryTable tbody"); sbody.innerHTML="";
+      for(let sym in summary){
+        const avg=summary[sym].qty!==0?(summary[sym].cost/summary[sym].qty):0;
+        const costBasis=avg*summary[sym].qty;
+        sbody.innerHTML+=`<tr>
+          <td>${sym}</td><td>${summary[sym].qty}</td>
+          <td>$${avg.toFixed(2)}</td><td>$${costBasis.toFixed(2)}</td>
         </tr>`;
       }
     }
 
-    function updateTrade(index, field, value) {
-      if (field === "qty" || field === "price") {
-        const numValue = parseFloat(value);
-        if (isNaN(numValue) || numValue < 0) {
-          alert(`请输入有效的${field === "qty" ? "数量" : "价格"}`);
-          renderTables();
-          return;
-        }
-        trades[index][field] = numValue;
-      } else if (field === "symbol") {
-        trades[index][field] = value.trim().replace(/~/g, '').toUpperCase();
+    function updateTrade(i,f,v){
+      if(f==="qty"||f==="price"){
+        const num=parseFloat(v); if(isNaN(num)||num<0){renderTables();return;}
+        trades[i][f]=num;
+      } else if(f==="symbol"){
+        trades[i][f]=v.trim().replace(/~/g,'').toUpperCase();
       }
-      
       updateSummary();
     }
 
-    function deleteTrade(index) {
-      trades.splice(index, 1);
-      renderTables();
-    }
+    function deleteTrade(i){ trades.splice(i,1); renderTables(); }
 
-    // 修复CSV导入功能
     document.getElementById("csvFile").addEventListener("change", function(e) {
       const file = e.target.files[0];
       if (!file) return;
       
-      // 验证文件类型
       if (file.type !== 'text/csv' && !file.name.endsWith('.csv')) {
         showStatus('请选择CSV格式的文件', true);
         return;
       }
       
-      // 读取并解析CSV
       const reader = new FileReader();
       
       reader.onload = function(event) {
@@ -467,7 +359,6 @@
           
           let importedCount = 0;
           results.data.forEach(row => {
-            // 更灵活的列名匹配，支持不同大小写和空格
             const action = row.Action || row.action || row.ACTION;
             const symbol = row.Symbol || row.symbol || row.SYMBOL;
             const quantity = row.Quantity || row.quantity || row.QUANTITY;
@@ -497,10 +388,7 @@
         showStatus('无法读取文件，请尝试其他文件', true);
       };
       
-      // 读取文件内容
       reader.readAsText(file);
-      
-      // 重置文件输入，允许重复选择同一个文件
       this.value = '';
     });
   </script>

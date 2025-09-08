@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en" spellcheck="false">
 <head>
@@ -6,7 +5,6 @@
   <title>Trade Tracker</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
   <style>
-    /* 样式部分保持不变 */
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: #f8f9fa;
@@ -95,6 +93,11 @@
       outline: 2px solid #3498db;
       outline-offset: -1px;
     }
+    /* Add Trade 行光标居中 */
+    #addTradeTable td[contenteditable="true"] {
+      vertical-align: middle;
+      text-align: center;
+    }
     .action-cell { 
       width: 100%; 
       cursor: pointer; 
@@ -130,267 +133,249 @@
       transition: background 0.2s;
     }
     .action-option:hover { background: #f1f8ff; color: #3498db; }
-    #addTradeTable {
-      margin-bottom: 10px;
-    }
-    #addRow td {
-      padding: 5px 3px;
-    }
+    #addTradeTable { margin-bottom: 10px; }
+    #addRow td { padding: 5px 3px; }
     [placeholder]:empty:before {
       content: attr(placeholder);
       color: #999;
       font-style: italic;
     }
-    [placeholder]:empty:focus:before {
-      content: "";
-    }
+    [placeholder]:empty:focus:before { content: ""; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>📊 Trade Tracker</h1>
+<div class="container">
+  <h1>📊 Trade Tracker</h1>
 
-    <div class="upload-container">
-      <label for="csvFile" class="upload-btn">📂 Import CSV</label>
-      <input type="file" id="csvFile" accept=".csv">
-      <div class="upload-status" id="uploadStatus"></div>
-      <div class="upload-error" id="uploadError"></div>
-    </div>
-
-    <h2>➕ Add Trade</h2>
-    <table id="addTradeTable">
-      <thead>
-        <tr>
-          <th>Action</th><th>Symbol</th><th>Quantity</th><th>Price</th><th>Add</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr id="addRow">
-          <td class="action-cell" id="newAction" onclick="showNewActionOptions(this)">Buy</td>
-          <td contenteditable="true" id="newSymbol" placeholder="Ticker"></td>
-          <td contenteditable="true" id="newQty" placeholder="Shares"></td>
-          <td contenteditable="true" id="newPrice" placeholder="Price"></td>
-          <td><button onclick="manualAdd()">+</button></td>
-        </tr>
-      </tbody>
-    </table>
-
-    <h2>Transactions</h2>
-    <table id="tradeTable">
-      <thead>
-        <tr>
-          <th>Action</th><th>Symbol</th><th>Quantity</th><th>Price</th><th>Delete</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-
-    <h2>Summary</h2>
-    <table id="summaryTable">
-      <thead>
-        <tr>
-          <th>Symbol</th><th>Current Quantity</th><th>Average Price</th><th>Cost Basis</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+  <div class="upload-container">
+    <label for="csvFile" class="upload-btn">📂 Import CSV</label>
+    <input type="file" id="csvFile" accept=".csv">
+    <div class="upload-status" id="uploadStatus"></div>
+    <div class="upload-error" id="uploadError"></div>
   </div>
 
-  <script>
-    let trades = [];
-    let activeOptions = null;
+  <h2>➕ Add Trade</h2>
+  <table id="addTradeTable">
+    <thead>
+      <tr>
+        <th>Action</th><th>Symbol</th><th>Quantity</th><th>Price</th><th>Add</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr id="addRow">
+        <td class="action-cell" id="newAction" onclick="showNewActionOptions(this)">Buy</td>
+        <td contenteditable="true" id="newSymbol" placeholder="Ticker"></td>
+        <td contenteditable="true" id="newQty" placeholder="Shares"></td>
+        <td contenteditable="true" id="newPrice" placeholder="Price"></td>
+        <td><button onclick="manualAdd()">+</button></td>
+      </tr>
+    </tbody>
+  </table>
 
-    function showStatus(msg, err=false) {
-      const s = document.getElementById('uploadStatus');
-      const e = document.getElementById('uploadError');
-      s.style.display = err ? 'none':'block';
-      e.style.display = err ? 'block':'none';
-      if (err) e.textContent = msg; else s.textContent = msg;
-      setTimeout(()=>{s.style.display='none'; e.style.display='none';},3000);
-    }
+  <h2>Transactions</h2>
+  <table id="tradeTable">
+    <thead>
+      <tr>
+        <th>Action</th><th>Symbol</th><th>Quantity</th><th>Price</th><th>Delete</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
-    document.addEventListener('click', e=>{
-      if (activeOptions && !activeOptions.contains(e.target) && 
-          !e.target.classList.contains('action-cell')) {
-        activeOptions.remove(); activeOptions=null;
-      }
+  <h2>Summary</h2>
+  <table id="summaryTable">
+    <thead>
+      <tr>
+        <th>Symbol</th><th>Current Quantity</th><th>Average Price</th><th>Cost Basis</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<script>
+let trades = [];
+let activeOptions = null;
+
+function showStatus(msg, err=false) {
+  const s = document.getElementById('uploadStatus');
+  const e = document.getElementById('uploadError');
+  s.style.display = err ? 'none':'block';
+  e.style.display = err ? 'block':'none';
+  if (err) e.textContent = msg; else s.textContent = msg;
+  setTimeout(()=>{s.style.display='none'; e.style.display='none';},3000);
+}
+
+document.addEventListener('click', e=>{
+  if (activeOptions && !activeOptions.contains(e.target) && !e.target.classList.contains('action-cell')) {
+    activeOptions.remove(); activeOptions=null;
+  }
+});
+
+function showActionOptions(index, cell){
+  if (activeOptions) activeOptions.remove();
+  const box=document.createElement('div');
+  box.className='action-options';
+  ["Buy","Sell","Sell Short","Buy to Cover"].forEach(a=>{
+    const o=document.createElement('div'); o.className='action-option';
+    o.textContent=a;
+    o.onclick=()=>{trades[index].action=a; renderTables(); box.remove(); activeOptions=null;};
+    box.appendChild(o);
+  });
+  const rect=cell.getBoundingClientRect();
+  box.style.top=`${rect.bottom+window.scrollY}px`; 
+  box.style.left=`${rect.left+window.scrollX}px`;
+  document.body.appendChild(box); activeOptions=box; setTimeout(()=>box.style.display='block',10);
+}
+
+function showNewActionOptions(cell){
+  if (activeOptions) activeOptions.remove();
+  const box=document.createElement('div'); box.className='action-options';
+  ["Buy","Sell","Sell Short","Buy to Cover"].forEach(a=>{
+    const o=document.createElement('div'); o.className='action-option';
+    o.textContent=a;
+    o.onclick=()=>{ cell.textContent=a; box.remove(); activeOptions=null; };
+    box.appendChild(o);
+  });
+  const rect=cell.getBoundingClientRect();
+  box.style.top=`${rect.bottom+window.scrollY}px`; 
+  box.style.left=`${rect.left+window.scrollX}px`;
+  document.body.appendChild(box); activeOptions=box; setTimeout(()=>box.style.display='block',10);
+}
+
+function normalizeQty(action, qty){
+  qty=Number(qty);
+  if (action==="Buy"||action==="Buy to Cover") return qty;
+  if (action==="Sell"||action==="Sell Short") return -qty;
+  return qty;
+}
+
+function addTrade(action,symbol,qty,price,prepend=false){
+  symbol=symbol.replace(/~/g,'').toUpperCase();
+  const trade={action,symbol,qty:Number(qty),price:Number(price)};
+  if(prepend){trades.unshift(trade);}else{trades.push(trade);}
+  renderTables();
+}
+
+function manualAdd(){
+  const action=document.getElementById("newAction").textContent;
+  const symbol=document.getElementById("newSymbol").textContent.trim().replace(/~/g,'').toUpperCase();
+  const qty=document.getElementById("newQty").textContent;
+  const price=document.getElementById("newPrice").textContent;
+
+  if(!symbol||!qty||!price) return;
+
+  addTrade(action,symbol,qty,price,true);
+
+  document.getElementById("newQty").textContent="";
+  document.getElementById("newPrice").textContent="";
+  document.getElementById("newQty").focus();
+}
+
+function renderTables(){
+  const tbody=document.querySelector("#tradeTable tbody");
+  tbody.innerHTML="";
+  trades.forEach((t,i)=>{
+    const row=document.createElement('tr');
+    const ac=document.createElement('td'); ac.className='action-cell'; ac.textContent=t.action;
+    ac.onclick=e=>{e.stopPropagation(); showActionOptions(i,ac);};
+    const sc=document.createElement('td'); sc.contentEditable=true; sc.textContent=t.symbol;
+    sc.onblur=()=>updateTrade(i,'symbol',sc.textContent);
+    const qc=document.createElement('td'); qc.contentEditable=true; qc.textContent=t.qty;
+    qc.onblur=()=>updateTrade(i,'qty',qc.textContent);
+    const pc=document.createElement('td'); pc.contentEditable=true; pc.textContent=t.price;
+    pc.onblur=()=>updateTrade(i,'price',pc.textContent);
+    const dc=document.createElement('td');
+    dc.innerHTML=`<button class="action-btn delete-btn" onclick="deleteTrade(${i})">🗑</button>`;
+    row.append(ac,sc,qc,pc,dc); tbody.appendChild(row);
+  });
+  disableEnterInTradeTable();
+  updateSummary();
+}
+
+// 禁止 Transactions 表格 Enter 换行
+function disableEnterInTradeTable(){
+  document.querySelectorAll("#tradeTable td[contenteditable='true']").forEach(cell=>{
+    cell.addEventListener('keydown', function(e){
+      if(e.key==='Enter') e.preventDefault();
     });
+  });
+}
 
-    document.getElementById('addRow').addEventListener('keypress', function(e){
-      if (e.key==='Enter'){ e.preventDefault(); manualAdd(); }
-    });
+function updateSummary(){
+  const summary={};
+  trades.forEach(t=>{
+    const q=normalizeQty(t.action,t.qty);
+    if(!summary[t.symbol]) summary[t.symbol]={qty:0,cost:0};
+    summary[t.symbol].qty+=q;
+    summary[t.symbol].cost+=q*t.price;
+  });
+  const sbody=document.querySelector("#summaryTable tbody"); sbody.innerHTML="";
+  for(let sym in summary){
+    const avg=summary[sym].qty!==0?(summary[sym].cost/summary[sym].qty):0;
+    const costBasis=avg*summary[sym].qty;
+    sbody.innerHTML+=`<tr>
+      <td>${sym}</td><td>${summary[sym].qty}</td>
+      <td>$${avg.toFixed(2)}</td><td>$${costBasis.toFixed(2)}</td>
+    </tr>`;
+  }
+}
 
-    function showActionOptions(index, cell){
-      if (activeOptions) activeOptions.remove();
-      const box=document.createElement('div');
-      box.className='action-options';
-      ["Buy","Sell","Sell Short","Buy to Cover"].forEach(a=>{
-        const o=document.createElement('div'); o.className='action-option';
-        o.textContent=a; o.onclick=()=>{trades[index].action=a; renderTables(); box.remove(); activeOptions=null;};
-        box.appendChild(o);
-      });
-      const rect=cell.getBoundingClientRect();
-      box.style.top=`${rect.bottom+window.scrollY}px`; box.style.left=`${rect.left+window.scrollX}px`;
-      document.body.appendChild(box); activeOptions=box; setTimeout(()=>box.style.display='block',10);
-    }
+function updateTrade(i,f,v){
+  if(f==="qty"||f==="price"){
+    const num=parseFloat(v); if(isNaN(num)||num<0){renderTables();return;}
+    trades[i][f]=num;
+  } else if(f==="symbol"){
+    trades[i][f]=v.trim().replace(/~/g,'').toUpperCase();
+  }
+  updateSummary();
+}
 
-    function showNewActionOptions(cell){
-      if (activeOptions) activeOptions.remove();
-      const box=document.createElement('div'); box.className='action-options';
-      ["Buy","Sell","Sell Short","Buy to Cover"].forEach(a=>{
-        const o=document.createElement('div'); o.className='action-option';
-        o.textContent=a; o.onclick=()=>{cell.textContent=a; box.remove(); activeOptions=null;};
-        box.appendChild(o);
-      });
-      const rect=cell.getBoundingClientRect();
-      box.style.top=`${rect.bottom+window.scrollY}px`; box.style.left=`${rect.left+window.scrollX}px`;
-      document.body.appendChild(box); activeOptions=box; setTimeout(()=>box.style.display='block',10);
-    }
+function deleteTrade(i){ trades.splice(i,1); renderTables(); }
 
-    function normalizeQty(action, qty){
-      qty=Number(qty);
-      if (action==="Buy"||action==="Buy to Cover") return qty;
-      if (action==="Sell"||action==="Sell Short") return -qty;
-      return qty;
-    }
-
-    function addTrade(action,symbol,qty,price,prepend=false){
-      symbol=symbol.replace(/~/g,'').toUpperCase();
-      const trade={action,symbol,qty:Number(qty),price:Number(price)};
-      if(prepend){trades.unshift(trade);}else{trades.push(trade);}
-      renderTables();
-    }
-
-    function manualAdd(){
-      const action=document.getElementById("newAction").textContent;
-      const symbol=document.getElementById("newSymbol").textContent.trim().replace(/~/g,'').toUpperCase();
-      const qty=document.getElementById("newQty").textContent;
-      const price=document.getElementById("newPrice").textContent;
-
-      if(!symbol||!qty||!price) return;
-
-      addTrade(action,symbol,qty,price,true);
-
-      // 只清空数量和价格，保留Symbol
-      document.getElementById("newQty").textContent="";
-      document.getElementById("newPrice").textContent="";
-      // 聚焦到数量输入框，方便连续输入同一股票的交易
-      document.getElementById("newQty").focus();
-    }
-
-    function renderTables(){
-      const tbody=document.querySelector("#tradeTable tbody");
-      tbody.innerHTML="";
-      trades.forEach((t,i)=>{
-        const row=document.createElement('tr');
-        const ac=document.createElement('td'); ac.className='action-cell'; ac.textContent=t.action;
-        ac.onclick=e=>{e.stopPropagation(); showActionOptions(i,ac);};
-        const sc=document.createElement('td'); sc.contentEditable=true; sc.textContent=t.symbol;
-        sc.onblur=()=>updateTrade(i,'symbol',sc.textContent);
-        const qc=document.createElement('td'); qc.contentEditable=true; qc.textContent=t.qty;
-        qc.onblur=()=>updateTrade(i,'qty',qc.textContent);
-        const pc=document.createElement('td'); pc.contentEditable=true; pc.textContent=t.price;
-        pc.onblur=()=>updateTrade(i,'price',pc.textContent);
-        const dc=document.createElement('td');
-        dc.innerHTML=`<button class="action-btn delete-btn" onclick="deleteTrade(${i})">🗑</button>`;
-        row.append(ac,sc,qc,pc,dc); tbody.appendChild(row);
-      });
-      updateSummary();
-    }
-
-    function updateSummary(){
-      const summary={};
-      trades.forEach(t=>{
-        const q=normalizeQty(t.action,t.qty);
-        if(!summary[t.symbol]) summary[t.symbol]={qty:0,cost:0};
-        summary[t.symbol].qty+=q;
-        summary[t.symbol].cost+=q*t.price;
-      });
-      const sbody=document.querySelector("#summaryTable tbody"); sbody.innerHTML="";
-      for(let sym in summary){
-        const avg=summary[sym].qty!==0?(summary[sym].cost/summary[sym].qty):0;
-        const costBasis=avg*summary[sym].qty;
-        sbody.innerHTML+=`<tr>
-          <td>${sym}</td><td>${summary[sym].qty}</td>
-          <td>$${avg.toFixed(2)}</td><td>$${costBasis.toFixed(2)}</td>
-        </tr>`;
-      }
-    }
-
-    function updateTrade(i,f,v){
-      if(f==="qty"||f==="price"){
-        const num=parseFloat(v); if(isNaN(num)||num<0){renderTables();return;}
-        trades[i][f]=num;
-      } else if(f==="symbol"){
-        trades[i][f]=v.trim().replace(/~/g,'').toUpperCase();
-      }
-      updateSummary();
-    }
-
-    function deleteTrade(i){ trades.splice(i,1); renderTables(); }
-
-    document.getElementById("csvFile").addEventListener("change", function(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      
-      if (file.type !== 'text/csv' && !file.name.endsWith('.csv')) {
-        showStatus('请选择CSV格式的文件', true);
-        return;
-      }
-      
-      const reader = new FileReader();
-      
-      reader.onload = function(event) {
-        try {
-          const results = Papa.parse(event.target.result, {
-            header: true,
-            skipEmptyLines: true
-          });
-          
-          if (results.errors && results.errors.length > 0) {
-            showStatus(`CSV解析错误: ${results.errors[0].message}`, true);
-            return;
-          }
-          
-          if (!results.data || results.data.length === 0) {
-            showStatus('CSV文件中没有有效数据', true);
-            return;
-          }
-          
-          let importedCount = 0;
-          results.data.forEach(row => {
-            const action = row.Action || row.action || row.ACTION;
-            const symbol = row.Symbol || row.symbol || row.SYMBOL;
-            const quantity = row.Quantity || row.quantity || row.QUANTITY;
-            const price = row.Price || row.price || row.PRICE;
-            
-            if (action && symbol && quantity && price) {
-              let cleanedPrice = price.toString().replace(/\$/g, "").trim();
-              let cleanedSymbol = symbol.replace(/~/g, '').toUpperCase();
-              
-              addTrade(action, cleanedSymbol, quantity, cleanedPrice);
-              importedCount++;
-            }
-          });
-          
-          if (importedCount > 0) {
-            showStatus(`成功导入 ${importedCount} 条交易记录`);
-          } else {
-            showStatus('未找到有效的交易记录，请检查CSV格式', true);
-          }
-        } catch (error) {
-          showStatus(`导入失败: ${error.message}`, true);
-          console.error('CSV导入错误:', error);
+// CSV 导入
+document.getElementById("csvFile").addEventListener("change", function(e) {
+  const file = e.target.files[0]; if (!file) return;
+  if (file.type !== 'text/csv' && !file.name.endsWith('.csv')) {
+    showStatus('请选择CSV格式的文件', true); return;
+  }
+  const reader = new FileReader();
+  reader.onload = function(event){
+    try{
+      const results = Papa.parse(event.target.result,{header:true, skipEmptyLines:true});
+      if(results.errors && results.errors.length>0){ showStatus(`CSV解析错误: ${results.errors[0].message}`, true); return; }
+      if(!results.data || results.data.length===0){ showStatus('CSV文件中没有有效数据', true); return; }
+      let importedCount=0;
+      results.data.forEach(row=>{
+        const action = row.Action || row.action || row.ACTION;
+        const symbol = row.Symbol || row.symbol || row.SYMBOL;
+        const quantity = row.Quantity || row.quantity || row.QUANTITY;
+        const price = row.Price || row.price || row.PRICE;
+        if(action && symbol && quantity && price){
+          let cleanedPrice=price.toString().replace(/\$/g,"").trim();
+          let cleanedSymbol=symbol.replace(/~/g,'').toUpperCase();
+          addTrade(action, cleanedSymbol, quantity, cleanedPrice);
+          importedCount++;
         }
-      };
-      
-      reader.onerror = function() {
-        showStatus('无法读取文件，请尝试其他文件', true);
-      };
-      
-      reader.readAsText(file);
-      this.value = '';
-    });
-  </script>
+      });
+      if(importedCount>0) showStatus(`成功导入 ${importedCount} 条交易记录`);
+      else showStatus('未找到有效的交易记录，请检查CSV格式', true);
+    } catch(error){
+      showStatus(`导入失败: ${error.message}`, true);
+      console.error('CSV导入错误:', error);
+    }
+  };
+  reader.onerror=function(){ showStatus('无法读取文件，请尝试其他文件', true); };
+  reader.readAsText(file);
+  this.value='';
+});
+
+// Add Trade 回车录入，Action / Symbol / Qty / Price 任意焦点都可
+['newAction','newSymbol','newQty','newPrice'].forEach(id=>{
+  document.getElementById(id).addEventListener('keypress', function(e){
+    if(e.key==='Enter'){ e.preventDefault(); manualAdd(); }
+  });
+});
+</script>
 </body>
 </html>
